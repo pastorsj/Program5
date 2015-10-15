@@ -18,7 +18,6 @@ smooth out vec4 smoothColor;
 
 vec4 justColor()
 {
-    //Diffuse Reflectance: Id = Reflectance Coefficent*(Light Normal.Surface Normal)*Diffuse Light Value
     return vec4(colorIn, 1);
 }
 
@@ -29,7 +28,19 @@ vec4 gouraud()
 
 vec4 phong()
 {
-    return vec4(1, 1, 1, 1);
+    vec3 ambientIntensity = 0.1 * colorIn;
+    vec4 lightNormal = L * lightPos;
+    vec4 surfaceNormal = vec4(colorIn * 2 - vec3(1,1,1), 1); //Reversing the scaling operation
+    float dot1 = dot(lightNormal, surfaceNormal);
+    //Change
+    float distance = sqrt(pow(pos.x-colorIn.x, 2) + pow(pos.y-colorIn.y, 2) + pow(pos.z-colorIn.z, 2));
+    vec3 diffuseIntensity = (1 / distance) * dot1 * colorIn;
+    vec4 viewVector = C * camPos;
+    float dot2 = dot(viewVector, surfaceNormal);
+    vec4 reflectionVector = (2 * dot2 * surfaceNormal) - viewVector;
+    float dot3 = dot(reflectionVector, viewVector);
+    vec3 specularIntensity = colorIn * pow(dot3, 10);
+    return vec4(ambientIntensity + diffuseIntensity + specularIntensity, 1);
 }
 
 void main()
