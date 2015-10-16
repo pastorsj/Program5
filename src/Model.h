@@ -14,8 +14,8 @@ public:
     void init()
     {
 		objLoader loader;
-		loader.load("resources/cube.obj");
-		//loader.load("resources/sphere.obj");
+		//loader.load("resources/cube.obj");
+		loader.load("resources/sphere.obj");
 		//loader.load("resources/teapot.obj");
         //loader.load("resources/test.obj");
 		

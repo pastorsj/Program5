@@ -15,6 +15,9 @@ in vec3 pos;
 in vec3 colorIn;
 
 smooth out vec4 smoothColor;
+smooth out vec4 surfaceNormal;
+smooth out vec4 lightVector;
+smooth out vec4 viewVector;
 
 vec4 justColor()
 {
@@ -23,24 +26,23 @@ vec4 justColor()
 
 vec4 gouraud()
 {
-    return abs(vec4(1) - vec4(colorIn, 1));
+    vec4 normal = (surfaceNormal + 1.0f) * 0.5f;
+    vec4 ambientIntensity = 0.1 * vec4(1,1,1,1);
+    
+    //Reversing the scaling operation
+    float dot1 = max(dot(lightVector, surfaceNormal), 0.0);
+    vec4 diffuseIntensity = normal * dot1 * vec4(1,1,1,1);
+    
+    vec4 reflectionVector = normalize(reflect(-lightVector, surfaceNormal));
+    float dot2 = max(dot(viewVector, clamp(reflectionVector, 0.0, 1.0)), 0.0);
+    vec4 specularIntensity =  vec4(1,1,1,0) * pow(dot2, 10.0);
+    
+    return ambientIntensity + diffuseIntensity + specularIntensity;
 }
 
 vec4 phong()
 {
-    vec3 ambientIntensity = 0.1 * colorIn;
-    vec4 lightNormal = L * lightPos;
-    vec4 surfaceNormal = vec4(colorIn * 2 - vec3(1,1,1), 1); //Reversing the scaling operation
-    float dot1 = dot(lightNormal, surfaceNormal);
-    //Change
-    float distance = sqrt(pow(pos.x-colorIn.x, 2) + pow(pos.y-colorIn.y, 2) + pow(pos.z-colorIn.z, 2));
-    vec3 diffuseIntensity = (1 / distance) * dot1 * colorIn;
-    vec4 viewVector = C * camPos;
-    float dot2 = dot(viewVector, surfaceNormal);
-    vec4 reflectionVector = (2 * dot2 * surfaceNormal) - viewVector;
-    float dot3 = dot(reflectionVector, viewVector);
-    vec3 specularIntensity = colorIn * pow(dot3, 10);
-    return vec4(ambientIntensity + diffuseIntensity + specularIntensity, 1);
+    return justColor();
 }
 
 void main()
@@ -48,6 +50,10 @@ void main()
     //TODO add gouraud and phong shading support
     
 	vec4 pos = vec4(pos, 1);
+    
+    surfaceNormal = vec4(colorIn * 2 - vec3(1,1,1), 0);
+    lightVector = normalize(L*lightPos - pos);
+    viewVector = normalize(camPos-pos);
 	gl_Position = P*M*pos;
     
     if(shadingMode == 0)
